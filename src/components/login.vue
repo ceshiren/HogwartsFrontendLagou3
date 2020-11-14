@@ -1,4 +1,5 @@
 <template>
+<v-app>
 <v-main>
       <v-container fluid fill-height>
         <v-layout align-center justify-center>
@@ -26,8 +27,8 @@
               </v-toolbar>
               <v-card-text>
                 <v-form>
-                  <v-text-field prepend-icon="mdi-account" name="login" label="Login" type="text"></v-text-field>
-                  <v-text-field id="password" prepend-icon="mdi-lock" name="password" label="Password" type="password"></v-text-field>
+                  <v-text-field prepend-icon="mdi-account" name="login" v-model="name" label="Login" type="text" ></v-text-field>
+                  <v-text-field id="password" prepend-icon="mdi-lock" name="password" v-model="password" label="Password" type="password"></v-text-field>
                 </v-form>
               </v-card-text>
               <v-card-actions>
@@ -37,21 +38,65 @@
             </v-card>
           </v-flex>
         </v-layout>
+            <v-snackbar
+      v-model="snackbar"
+    >
+      {{ text }}
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          color="pink"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
+
       </v-container>
 </v-main>
+</v-app>
 </template>
 
 <script>
+import http from "@/http"
+
   export default {
     data: () => ({
-      drawer: null
+      drawer: null,
+      name: "seveniruby",
+      password: "seveniruby",
+      snackbar: false,
+      text: `用户名或者密码错误`
     }),
     props: {
       source: String
     },
     methods: {
         to_dashboard: function() {
-          this.$router.push("dashboard");
+          console.log(this.name)
+          console.log(this.password)
+          http.post('/login', {
+            username: this.name,
+            password: this.password
+          }).then(res=>{
+            console.log(res)
+            if(res.data.msg==="login fail"){
+              console.log("error")
+              this.snackbar = true
+            }else{
+              this.snackbar=true
+              this.text="登录成功"
+              localStorage.setItem("token", res.data.access_token)
+              this.$router.push("dashboard");
+            }
+            
+          }).catch(err=>{
+            console.log(err)
+          })
+          
         }
           
     }
